@@ -1,0 +1,88 @@
+JAVA
+
+package com.example.contextmenu;
+
+import android.os.Bundle;
+import android.app.Activity;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.Toast;
+
+public class MainActivity extends Activity {
+ListView lv;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        lv=(ListView)findViewById(R.id.listView1);
+        String contacts[]={"ardra","jisna","arya","anu","kiran","aswin"};
+        ArrayAdapter<String> ad=new ArrayAdapter<String>(this,R.layout.sub_context,contacts);
+        lv.setAdapter(ad);
+        registerForContextMenu(lv);
+    }
+    public void onCreateContextMenu(ContextMenu menu,View v,ContextMenuInfo menuinfo){
+    	super.onCreateContextMenu(menu, v, menuinfo);
+    	menu.setHeaderTitle("select action");
+    	menu.add(0,v.getId(),0,"CALL");
+    	menu.add(0,v.getId(),0,"ADD CONTACT");
+    	menu.add(0,v.getId(),0,"DELETE CONTACT");
+    	menu.add(0,v.getId(),0,"SMS");
+    }public boolean onContextItemSelected(MenuItem item){
+    	if(item.getTitle()=="CALL"){
+    		Toast.makeText(getApplicationContext(),"calling code",Toast.LENGTH_LONG).show();
+    	}else if(item.getTitle()=="SMS"){
+    		Toast.makeText(getApplicationContext(), "sending sms",Toast.LENGTH_LONG).show();
+    	}else{
+    		return false;
+    	}
+		return true;
+    }
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+    
+}
+
+
+
+ACTIVITY MAIN XML
+
+
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <ListView
+        android:id="@+id/listView1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+    </ListView>
+
+</LinearLayout>
+
+SUB CONTEXT XML
+
+
+<?xml version="1.0" encoding="utf-8"?>
+    <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/textView1"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:layout_weight="0.11"
+        android:background="#fff000"
+        android:text="@TextView"
+        android:textSize="20sp" />
+
+

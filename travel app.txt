@@ -1,0 +1,240 @@
+package com.example.travelapp;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+
+
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.util.Log;
+import android.view.Menu;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+
+public class MainActivity extends Activity {
+
+	EditText txtUname,txtPass;
+	Button btnSignup,btnLogin;
+//	String URL="http://10.0.2.2:8080/TravalAppServer/apptransaction/login.jsp";
+	String URL="http://192.168.43.82:8080/TravalAppServer/apptransaction/login.jsp";
+	SharedPreferences sharedPref;
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
+		
+		btnLogin=(Button) findViewById(R.id.btnLogin);
+		btnSignup=(Button) findViewById(R.id.btnSignup);
+		txtPass=(EditText) findViewById(R.id.txtPass);
+		txtUname=(EditText) findViewById(R.id.txtUname);
+				
+		
+		btnLogin.setOnClickListener(new OnClickListener(
+				) {
+			
+			@Override
+			public void onClick(View arg0) {
+				// TODO Auto-generated method stub
+				
+				
+				
+				new Login().execute();
+				
+			}
+		});
+		
+		btnSignup.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+			Intent i=new Intent(MainActivity.this,RegisterActivity.class);
+			startActivity(i);
+			}
+		});
+		
+		
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.main, menu);
+		return true;
+	}
+	
+	
+	public class Login extends AsyncTask<String, String, String>
+	{
+
+	    ProgressDialog pd;
+	    protected void onPreExecute()
+	    {
+	    	super.onPreExecute();
+	    	pd=new ProgressDialog(MainActivity.this);
+	    	pd.setCancelable(false);
+	    	//pd.isIndeterminate();
+	    	pd.setMessage("Login Process");
+	    	pd.setTitle("Please wait");
+	    	pd.show();
+	    	Log.d("inside onpre","onpre");
+	    }
+	   
+		protected String doInBackground(String... params) {
+			// TODO Auto-generated method stub
+			String str="";
+			Log.d("inside inback","inside inback");
+			List<NameValuePair> pdat=new ArrayList<NameValuePair>(6);
+			pdat.add(new BasicNameValuePair("uname",txtUname.getText().toString().trim()));
+			pdat.add(new BasicNameValuePair("pass",txtPass.getText().toString().trim()));
+			
+			
+			
+			HttpClient client=new DefaultHttpClient();
+			HttpPost mypdat=new HttpPost(URL);
+			Log.d("iinback","inside inback");
+			try 
+			{
+				mypdat.setEntity(new UrlEncodedFormEntity(pdat));
+				Log.d("post data","post data");
+			} 
+			catch (UnsupportedEncodingException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			try 
+			{
+				Log.d("inside responce","response");
+				HttpResponse re=client.execute(mypdat);
+				HttpEntity entity=re.getEntity();
+				str=EntityUtils.toString(entity);
+				Log.d("response",str);
+				int status=re.getStatusLine().getStatusCode();
+				Log.d("Staus code",""+status);
+				if(status==200)
+				{
+					Log.d("insdie status check",str);
+					//pd.setMessage("sending data complete");
+//					pd.dismiss();
+//					Intent toHome=new Intent(getApplicationContext(),MainActivity.class);
+//					startActivity(toHome);
+					return str;
+					
+				}
+				
+				
+			} 
+			catch (ClientProtocolException e) 
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} 
+			catch (IOException e) 
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+				
+				//return string if status 200 otherwise null
+			
+			
+			
+			
+			return null;
+		}
+		
+		protected void onPostExecute(String result)
+		{
+			super.onPostExecute(result);
+			Log.d("onpost",result);
+			
+			pd.dismiss();
+			if(!result.trim().equals("fail"))
+			{
+				
+				String rsult[]=result.trim().split(":");
+				
+				
+				
+			
+				String rid=rsult[0];
+				String rname=rsult[1];
+				String rpass=rsult[2];
+				String rphon=rsult[3];
+				String remail=rsult[4];
+				String types=rsult[5];
+				//editor.putString("password", txtPassword.getText().toString());
+				sharedPref = getSharedPreferences("logindata",Context.MODE_PRIVATE);
+				SharedPreferences.Editor editor=sharedPref.edit();
+				editor.putString("rid", rid);
+				editor.putString("rname", rname);				editor.putString("rpass", rpass);
+				editor.putString("rphon", rphon);
+				editor.putString("remail", remail);
+				editor.putString("types", types);
+				editor.commit();
+				
+				Toast.makeText(getApplicationContext(), "User Login Successfull", Toast.LENGTH_SHORT).show();
+				
+				if(types.equals("user")){
+					Intent toHome=new Intent(MainActivity.this,UserHomeActivity.class);
+					startActivity(toHome);
+				}
+				if(types.equals("driver")){
+					Intent toHome=new Intent(MainActivity.this,DriverHomeActivity.class);
+					startActivity(toHome);
+				}
+				if(types.equals("admin")){
+					Intent toHome=new Intent(MainActivity.this,AdminHomeActivity.class);
+					startActivity(toHome);
+				}
+				
+				
+//				finish();
+//				startActivity(getIntent());
+				
+//				Bundle bundle=new Bundle();
+//				bundle.putString("mynumr", pnum);
+//				bundle.putString("type", "newreg");
+//				
+//				Intent toPro=new Intent(RegistrationActivity.this,ProfilepicActivity.class);
+//				toPro.putExtras(bundle);
+//				startActivity(toPro);
+				
+//				Intent toHome=new Intent(MainActivity.this,UserHomeActivity.class);
+//				startActivity(toHome);
+//				Toast.makeText(getApplicationContext(), "Registration successfull", Toast.LENGTH_LONG).show();
+			}
+			else
+			{
+				Toast.makeText(getApplicationContext(), "Problem while Login", Toast.LENGTH_LONG).show();
+				Intent i=new Intent(MainActivity.this,MainActivity.class);
+        		startActivity(i);
+			}
+			
+		}
+		
+	}
+
+}
